@@ -8,6 +8,10 @@
 import os
 import time
 from typing import List, Optional
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
 
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -27,10 +31,17 @@ class ClaimExtractor:
         # 从环境变量读取配置
         api_key = os.getenv("OPENAI_API_KEY")
         base_url = os.getenv("OPENAI_BASE_URL")
-        model_name = os.getenv("OPENAI_MODEL")
+        model_name = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
+
+        if not model_name:
+            raise ValueError("缺少环境变量 OPENAI_MODEL")
 
         # 使用 init_chat_model 初始化模型，支持 OpenAI 兼容接口
-        self.llm = init_chat_model(model_name)
+        # 对于 kimi 模型，需要指定 model_provider="openai" 因为它使用 OpenAI 兼容接口
+        if model_name.startswith("kimi"):
+            self.llm = init_chat_model(model_name, model_provider="openai")
+        else:
+            self.llm = init_chat_model(model_name)
         self.template = FANREN_CLAIM_EXTRACT_CHAT_TEMPLATE
 
     def extract_claims_from_chunk(self, chunk: ChapterChunk, entities: Optional[List[str]] = None) -> ChapterClaim:
