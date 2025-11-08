@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-陈述类型探索器
-通过启发式方法探索和完善陈述类型定义
+修仙小说事实提取评估器
+基于6个核心原则评估文本片段的事实提取效果
 """
 
 import os
@@ -37,67 +37,103 @@ class TextFragment:
 
 
 @dataclass
-class AnalysisResult:
-    """分析结果"""
+class FactExtractionResult:
+    """事实提取结果"""
     fragment_id: str
     original_content: str
-    extracted_claims: List[Dict[str, Any]]
-    uncovered_statements: List[str]  # 现有定义无法覆盖的陈述
-    suggestions: List[str]  # 对类型定义的建议
-    confidence_score: int  # 分析置信度
+
+    # 6个核心原则的提取结果
+    strength_system_facts: List[str]  # 实力体系
+    resource_flow_facts: List[str]    # 资源流转
+    relationship_facts: List[str]     # 关系网络
+    identity_facts: List[str]         # 身份认知
+    combat_process_facts: List[str]   # 战斗过程
+    narrative_function_facts: List[str] # 叙事功能
+
+    # 评估指标
+    coverage_score: float  # 覆盖度得分 (0-100)
+    completeness_score: float  # 完整性得分 (0-100)
+    quality_score: float  # 质量得分 (0-100)
+
+    # 问题识别
+    missing_aspects: List[str]  # 缺失的方面
+    extraction_issues: List[str]  # 提取问题
+    suggestions: List[str]  # 改进建议
 
 
-class ClaimTypeExplorer:
-    """陈述类型探索器"""
+class FactExtractionEvaluator:
+    """事实提取评估器"""
 
-    # 陈述类型分析提示词模板
-    CLAIM_TYPE_ANALYSIS_PROMPT = """
+  # 事实提取评估提示词模板
+    FACT_EXTRACTION_EVALUATION_PROMPT = """
 -Goal-
-分析给定文本片段中的陈述性事实，评估现有陈述类型定义的覆盖度，并提出改进建议。
+基于修仙小说事实提取的6个核心原则，分析给定文本片段，评估当前事实提取的覆盖度和完整性。
 
--Current Claim Types-
-当前陈述类型定义：
-1. 实力对比陈述：展现角色之间的强弱关系、战斗结果
-2. 能力边界陈述：说明角色能做什么、不能做什么、掌握程度如何
-3. 代价成本陈述：展现行动需要付出的代价、副作用、风险
-4. 身份地位陈述：说明角色的身份、称号、在世界观中的位置
-5. 认知震惊陈述：角色对某事的惊讶、怀疑、误判，揭示信息差
-6. 因果链条陈述：完整的因果关系：原因→行动→结果
-7. 状态转变陈述：角色形态、境界、处境的变化过程
+-6个核心原则-
+修仙小说的事实提取应关注以下6个方面：
+
+1. 实力体系：展现角色强弱对比、能力边界、成长轨迹
+2. 资源流转：法宝、灵药、材料的获得与损失
+3. 关系网络：结盟、结仇、师徒、情感关系
+4. 身份认知：角色地位、声望、特殊身份、马甲系统
+5. 战斗过程：完整战斗的关键节点与策略
+6. 叙事功能：该事实在推动情节、制造冲突、揭示信息方面的作用
 
 -Analysis Steps-
-1. 识别文本中的所有陈述性事实
-2. 尝试用现有7种类型分类每个陈述
-3. 识别无法归类到现有类型的陈述
-4. 分析这些未覆盖陈述的共同特征
-5. 提出新的类型定义建议
+1. 识别文本中的关键实体（角色、物品、地点、势力等）
+2. 逐一分析文本内容对应6个核心原则中的哪些方面
+3. 提取每个方面的事实信息
+4. 识别可能被遗漏的重要事实
+5. 评估当前提取的覆盖度和质量
 
 -Output Format-
 请按以下格式输出：
 
-=== 成功归类的陈述 ===
-[陈述1]: 类型名称 - 陈述内容
-[陈述2]: 类型名称 - 陈述内容
+=== 实力体系事实 ===
+- [事实1]: 具体内容描述
+- [事实2]: 具体内容描述
 ...
 
-=== 未覆盖的陈述 ===
-[陈述1]: 陈述内容 - 无法归类的原因
-[陈述2]: 陈述内容 - 无法归类的原因
+=== 资源流转事实 ===
+- [事实1]: 具体内容描述
+- [事实2]: 具体内容描述
 ...
 
-=== 新类型建议 ===
-[建议1]: 新类型名称 - 定义 - 包含的陈述
-[建议2]: 新类型名称 - 定义 - 包含的陈述
+=== 关系网络事实 ===
+- [事实1]: 具体内容描述
+- [事实2]: 具体内容描述
 ...
 
-=== 类型定义评估 ===
-覆盖度: [1-10分]
-问题分析: [现有定义的主要问题]
-改进方向: [具体的改进建议]
+=== 身份认知事实 ===
+- [事实1]: 具体内容描述
+- [事实2]: 具体内容描述
+...
+
+=== 战斗过程事实 ===
+- [事实1]: 具体内容描述
+- [事实2]: 具体内容描述
+...
+
+=== 叙事功能事实 ===
+- [事实1]: 具体内容描述
+- [事实2]: 具体内容描述
+...
+
+=== 遗漏识别 ===
+- [遗漏事实1]: 应该提取但遗漏的内容
+- [遗漏事实2]: 应该提取但遗漏的内容
+...
+
+=== 质量评估 ===
+覆盖度得分: [0-100分]
+完整性得分: [0-100分]
+主要问题: [问题描述]
+改进建议: [具体建议]
 
 -Real Data-
 文本片段: {fragment_content}
 章节: 第{chapter_id}章 {chapter_title}
+提及的实体: {entities_mentioned}
 
 Output:"""
 
@@ -133,13 +169,13 @@ Output:"""
 """
 
     def __init__(self):
-        """初始化探索器"""
+        """初始化评估器"""
         load_dotenv()
         self.llm = ChatOpenAI(
             model="kimi-k2-0905-preview",
             temperature=0.2,  # 稍微提高温度以获得更有创意的分析
         )
-        self.exploration_results: List[AnalysisResult] = []
+        self.evaluation_results: List[FactExtractionResult] = []
 
     def sample_random_fragments(self, novel_name: str, raw_text: str,
                                count: int = 10, min_length: int = 100,
@@ -236,31 +272,32 @@ Output:"""
 
         return list(set(entities))  # 去重
 
-    def analyze_fragment(self, fragment: TextFragment) -> AnalysisResult:
+    def evaluate_fragment(self, fragment: TextFragment) -> FactExtractionResult:
         """
-        分析单个文本片段
+        评估单个文本片段的事实提取效果
 
         Args:
             fragment: 文本片段
 
         Returns:
-            AnalysisResult: 分析结果
+            FactExtractionResult: 评估结果
         """
-        print(f"正在分析片段 {fragment.fragment_id}...")
+        print(f"正在评估片段 {fragment.fragment_id}...")
 
-        system_prompt = self.CLAIM_TYPE_ANALYSIS_PROMPT.format(
+        system_prompt = self.FACT_EXTRACTION_EVALUATION_PROMPT.format(
             fragment_content=fragment.content,
             chapter_id=fragment.chapter_id,
-            chapter_title=fragment.chapter_title
+            chapter_title=fragment.chapter_title,
+            entities_mentioned=', '.join(fragment.entities_mentioned)
         )
 
-        user_prompt = f"""请分析这个文本片段中的陈述性事实，特别关注现有类型定义无法很好覆盖的陈述。
+        user_prompt = f"""请基于6个核心原则评估这个文本片段的事实提取效果。
 
 片段ID: {fragment.fragment_id}
 章节: 第{fragment.chapter_id}章 {fragment.chapter_title}
 提及的实体: {', '.join(fragment.entities_mentioned)}
 
-请进行深入分析并提出改进建议。"""
+请分析各个原则下的事实提取情况，识别遗漏，并给出质量评估。"""
 
         # 调用LLM
         messages = [
@@ -269,34 +306,42 @@ Output:"""
         ]
 
         response = self.llm.invoke(messages)
-        analysis_text = response.content  # type: ignore
+        evaluation_text = response.content  # type: ignore
 
-        # 解析分析结果
-        result = self._parse_analysis_result(fragment, analysis_text)
+        # 解析评估结果
+        result = self._parse_evaluation_result(fragment, evaluation_text)
 
-        print(f"片段 {fragment.fragment_id} 分析完成")
+        print(f"片段 {fragment.fragment_id} 评估完成")
         return result
 
-    def _parse_analysis_result(self, fragment: TextFragment, analysis_text: str) -> AnalysisResult:
+    def _parse_evaluation_result(self, fragment: TextFragment, evaluation_text: str) -> FactExtractionResult:
         """
-        解析AI分析结果
+        解析AI评估结果
 
         Args:
             fragment: 文本片段
-            analysis_text: AI返回的分析文本
+            evaluation_text: AI返回的评估文本
 
         Returns:
-            AnalysisResult: 解析后的结果
+            FactExtractionResult: 解析后的结果
         """
-        lines = analysis_text.split('\n')
+        lines = evaluation_text.split('\n')
 
-        result = AnalysisResult(
+        result = FactExtractionResult(
             fragment_id=fragment.fragment_id,
             original_content=fragment.content,
-            extracted_claims=[],
-            uncovered_statements=[],
-            suggestions=[],
-            confidence_score=5
+            strength_system_facts=[],
+            resource_flow_facts=[],
+            relationship_facts=[],
+            identity_facts=[],
+            combat_process_facts=[],
+            narrative_function_facts=[],
+            coverage_score=0.0,
+            completeness_score=0.0,
+            quality_score=0.0,
+            missing_aspects=[],
+            extraction_issues=[],
+            suggestions=[]
         )
 
         current_section = None
@@ -304,38 +349,72 @@ Output:"""
         for line in lines:
             line = line.strip()
 
-            if line.startswith('=== 成功归类的陈述 ==='):
-                current_section = 'covered'
-            elif line.startswith('=== 未覆盖的陈述 ==='):
-                current_section = 'uncovered'
-            elif line.startswith('=== 新类型建议 ==='):
-                current_section = 'suggestions'
-            elif line.startswith('=== 类型定义评估 ==='):
+            # 识别各个事实类型部分
+            if line.startswith('=== 实力体系事实 ==='):
+                current_section = 'strength_system'
+            elif line.startswith('=== 资源流转事实 ==='):
+                current_section = 'resource_flow'
+            elif line.startswith('=== 关系网络事实 ==='):
+                current_section = 'relationship'
+            elif line.startswith('=== 身份认知事实 ==='):
+                current_section = 'identity'
+            elif line.startswith('=== 战斗过程事实 ==='):
+                current_section = 'combat_process'
+            elif line.startswith('=== 叙事功能事实 ==='):
+                current_section = 'narrative_function'
+            elif line.startswith('=== 遗漏识别 ==='):
+                current_section = 'missing'
+            elif line.startswith('=== 质量评估 ==='):
                 current_section = 'evaluation'
-            elif line.startswith('[陈述') and current_section == 'covered':
-                # 解析成功归类的陈述
-                result.extracted_claims.append(line)
-            elif line.startswith('[陈述') and current_section == 'uncovered':
-                # 解析未覆盖的陈述
-                result.uncovered_statements.append(line)
-            elif line.startswith('[建议') and current_section == 'suggestions':
-                # 解析建议
-                result.suggestions.append(line)
-            elif line.startswith('覆盖度:') and current_section == 'evaluation':
-                # 提取置信度
+            # 解析各类事实
+            elif line.startswith('- [事实') and current_section in ['strength_system', 'resource_flow', 'relationship', 'identity', 'combat_process', 'narrative_function']:
+                fact_content = line
+                if current_section == 'strength_system':
+                    result.strength_system_facts.append(fact_content)
+                elif current_section == 'resource_flow':
+                    result.resource_flow_facts.append(fact_content)
+                elif current_section == 'relationship':
+                    result.relationship_facts.append(fact_content)
+                elif current_section == 'identity':
+                    result.identity_facts.append(fact_content)
+                elif current_section == 'combat_process':
+                    result.combat_process_facts.append(fact_content)
+                elif current_section == 'narrative_function':
+                    result.narrative_function_facts.append(fact_content)
+            # 解析遗漏事项
+            elif line.startswith('- [遗漏事实') and current_section == 'missing':
+                result.missing_aspects.append(line)
+            # 解析评估得分
+            elif line.startswith('覆盖度得分:') and current_section == 'evaluation':
                 try:
                     score_str = line.split(':')[1].strip()
-                    score = int(''.join(filter(str.isdigit, score_str)))
-                    result.confidence_score = min(10, max(1, score))
+                    result.coverage_score = float(''.join(filter(lambda x: x.isdigit() or x == '.', score_str)))
                 except:
                     pass
+            elif line.startswith('完整性得分:') and current_section == 'evaluation':
+                try:
+                    score_str = line.split(':')[1].strip()
+                    result.completeness_score = float(''.join(filter(lambda x: x.isdigit() or x == '.', score_str)))
+                except:
+                    pass
+            elif line.startswith('主要问题:') and current_section == 'evaluation':
+                problem = line.replace('主要问题:', '').strip()
+                if problem:
+                    result.extraction_issues.append(problem)
+            elif line.startswith('改进建议:') and current_section == 'evaluation':
+                suggestion = line.replace('改进建议:', '').strip()
+                if suggestion:
+                    result.suggestions.append(suggestion)
+
+        # 计算质量得分
+        result.quality_score = (result.coverage_score + result.completeness_score) / 2
 
         return result
 
-    def run_exploration(self, novel_file: str = "resources/ignored/1.txt",
+    def run_evaluation(self, novel_file: str = "resources/ignored/1.txt",
                        novel_name: str = "fanren", fragment_count: int = 10):
         """
-        运行完整的探索流程
+        运行完整的事实提取评估流程
 
         Args:
             novel_file: 小说文件路径
@@ -358,7 +437,7 @@ Output:"""
 
         print(f"文件读取完成，总字符数: {len(raw_text)}")
         print("=" * 60)
-        print("开始陈述类型探索...")
+        print("开始事实提取评估...")
         print("=" * 60)
 
         # 第一步：随机采样片段
@@ -369,84 +448,125 @@ Output:"""
             return
 
         print("\n" + "=" * 60)
-        print("开始分析片段...")
+        print("开始评估片段...")
         print("=" * 60)
 
-        # 第二步：逐个分析片段
+        # 第二步：逐个评估片段
         for i, fragment in enumerate(fragments, 1):
-            print(f"\n[{i}/{len(fragments)}] 分析片段 {fragment.fragment_id}")
+            print(f"\n[{i}/{len(fragments)}] 评估片段 {fragment.fragment_id}")
             print(f"内容预览: {fragment.content[:100]}...")
 
-            result = self.analyze_fragment(fragment)
-            self.exploration_results.append(result)
+            result = self.evaluate_fragment(fragment)
+            self.evaluation_results.append(result)
 
-            print(f"  - 提取陈述: {len(result.extracted_claims)} 个")
-            print(f"  - 未覆盖陈述: {len(result.uncovered_statements)} 个")
-            print(f"  - 改进建议: {len(result.suggestions)} 个")
-            print(f"  - 分析置信度: {result.confidence_score}/10")
+            print(f"  - 实力体系事实: {len(result.strength_system_facts)} 个")
+            print(f"  - 资源流转事实: {len(result.resource_flow_facts)} 个")
+            print(f"  - 关系网络事实: {len(result.relationship_facts)} 个")
+            print(f"  - 身份认知事实: {len(result.identity_facts)} 个")
+            print(f"  - 战斗过程事实: {len(result.combat_process_facts)} 个")
+            print(f"  - 叙事功能事实: {len(result.narrative_function_facts)} 个")
+            print(f"  - 覆盖度得分: {result.coverage_score:.1f}/100")
+            print(f"  - 完整性得分: {result.completeness_score:.1f}/100")
+            print(f"  - 质量得分: {result.quality_score:.1f}/100")
 
-        # 第三步：总结探索结果
-        self._summarize_exploration()
+        # 第三步：总结评估结果
+        self._summarize_evaluation()
 
         # 第四步：生成改进建议
         self._generate_improvement_suggestions()
 
-    def _summarize_exploration(self):
-        """总结探索结果"""
+    def _summarize_evaluation(self):
+        """总结评估结果"""
         print("\n" + "=" * 60)
-        print("探索结果汇总")
+        print("事实提取评估结果汇总")
         print("=" * 60)
 
-        total_claims = sum(len(r.extracted_claims) for r in self.exploration_results)
-        total_uncovered = sum(len(r.uncovered_statements) for r in self.exploration_results)
-        total_suggestions = sum(len(r.suggestions) for r in self.exploration_results)
-        avg_confidence = sum(r.confidence_score for r in self.exploration_results) / len(self.exploration_results)
+        if not self.evaluation_results:
+            print("没有评估结果")
+            return
 
-        print(f"分析片段数: {len(self.exploration_results)}")
-        print(f"提取陈述总数: {total_claims}")
-        print(f"未覆盖陈述总数: {total_uncovered}")
-        print(f"改进建议总数: {total_suggestions}")
-        print(f"平均分析置信度: {avg_confidence:.1f}/10")
+        # 统计各类事实数量
+        total_strength = sum(len(r.strength_system_facts) for r in self.evaluation_results)
+        total_resource = sum(len(r.resource_flow_facts) for r in self.evaluation_results)
+        total_relationship = sum(len(r.relationship_facts) for r in self.evaluation_results)
+        total_identity = sum(len(r.identity_facts) for r in self.evaluation_results)
+        total_combat = sum(len(r.combat_process_facts) for r in self.evaluation_results)
+        total_narrative = sum(len(r.narrative_function_facts) for r in self.evaluation_results)
 
-        # 统计最常见的未覆盖陈述类型
-        all_uncovered = []
-        for result in self.exploration_results:
-            all_uncovered.extend(result.uncovered_statements)
+        # 计算平均得分
+        avg_coverage = sum(r.coverage_score for r in self.evaluation_results) / len(self.evaluation_results)
+        avg_completeness = sum(r.completeness_score for r in self.evaluation_results) / len(self.evaluation_results)
+        avg_quality = sum(r.quality_score for r in self.evaluation_results) / len(self.evaluation_results)
 
-        if all_uncovered:
-            print(f"\n最常见的未覆盖陈述模式:")
-            for i, statement in enumerate(all_uncovered[:10], 1):
-                print(f"  {i}. {statement}")
+        # 统计问题
+        all_issues = []
+        all_missing = []
+        all_suggestions = []
+        for result in self.evaluation_results:
+            all_issues.extend(result.extraction_issues)
+            all_missing.extend(result.missing_aspects)
+            all_suggestions.extend(result.suggestions)
+
+        print(f"评估片段数: {len(self.evaluation_results)}")
+        print(f"\n=== 各类事实提取统计 ===")
+        print(f"实力体系事实: {total_strength} 个")
+        print(f"资源流转事实: {total_resource} 个")
+        print(f"关系网络事实: {total_relationship} 个")
+        print(f"身份认知事实: {total_identity} 个")
+        print(f"战斗过程事实: {total_combat} 个")
+        print(f"叙事功能事实: {total_narrative} 个")
+        print(f"\n=== 质量评估 ===")
+        print(f"平均覆盖度得分: {avg_coverage:.1f}/100")
+        print(f"平均完整性得分: {avg_completeness:.1f}/100")
+        print(f"平均质量得分: {avg_quality:.1f}/100")
+
+        # 显示最常见的问题
+        if all_issues:
+            print(f"\n=== 主要问题统计 ===")
+            issue_counts = {}
+            for issue in all_issues:
+                issue_counts[issue] = issue_counts.get(issue, 0) + 1
+            sorted_issues = sorted(issue_counts.items(), key=lambda x: x[1], reverse=True)
+            for i, (issue, count) in enumerate(sorted_issues[:5], 1):
+                print(f"  {i}. {issue} (出现 {count} 次)")
+
+        # 显示最常遗漏的内容
+        if all_missing:
+            print(f"\n=== 常见遗漏内容 ===")
+            for i, missing in enumerate(all_missing[:5], 1):
+                print(f"  {i}. {missing}")
 
     def _generate_improvement_suggestions(self):
         """生成改进建议"""
         print("\n" + "=" * 60)
-        print("生成类型定义改进建议...")
+        print("生成事实提取改进建议...")
         print("=" * 60)
 
-        # 准备探索结果文本
-        exploration_text = "=== 各片段分析结果 ===\n"
-        for i, result in enumerate(self.exploration_results, 1):
-            exploration_text += f"\n片段{i} ({result.fragment_id}):\n"
-            exploration_text += f"内容: {result.original_content[:200]}...\n"
-            exploration_text += f"未覆盖陈述: {len(result.uncovered_statements)} 个\n"
-            for statement in result.uncovered_statements:
-                exploration_text += f"  - {statement}\n"
-            exploration_text += f"改进建议: {len(result.suggestions)} 个\n"
+        # 准备评估结果文本
+        evaluation_text = "=== 各片段评估结果 ===\n"
+        for i, result in enumerate(self.evaluation_results, 1):
+            evaluation_text += f"\n片段{i} ({result.fragment_id}):\n"
+            evaluation_text += f"内容: {result.original_content[:200]}...\n"
+            evaluation_text += f"质量得分: {result.quality_score:.1f}/100\n"
+            evaluation_text += f"覆盖度: {result.coverage_score:.1f}/100, 完整性: {result.completeness_score:.1f}/100\n"
+            evaluation_text += f"遗漏内容: {len(result.missing_aspects)} 个\n"
+            for missing in result.missing_aspects:
+                evaluation_text += f"  - {missing}\n"
+            evaluation_text += f"改进建议: {len(result.suggestions)} 个\n"
             for suggestion in result.suggestions:
-                exploration_text += f"  - {suggestion}\n"
+                evaluation_text += f"  - {suggestion}\n"
 
         system_prompt = self.FRAGMENT_SUMMARY_PROMPT.format(
-            exploration_results=exploration_text
+            exploration_results=evaluation_text
         )
 
-        user_prompt = """基于以上探索结果，请提供一份完整的陈述类型定义改进方案。
+        user_prompt = """基于以上评估结果，请提供一份完整的事实提取改进方案。
 
 特别关注：
-1. 识别系统性的类型缺失
-2. 确保新类型定义的互斥性和完备性
-3. 提供清晰的操作化定义和示例
-4. 考虑修仙小说的特殊性"""
+1. 识别6个核心原则下的系统性提取问题
+2. 确保事实提取的完整性和准确性
+3. 提供针对每个原则的具体改进建议
+4. 考虑修仙小说的特殊性和复杂性"""
 
         print("正在调用LLM生成改进建议...")
 
@@ -459,7 +579,7 @@ Output:"""
         improvement_suggestions = response.content  # type: ignore
 
         print("\n" + "=" * 60)
-        print("陈述类型定义改进建议")
+        print("事实提取改进建议")
         print("=" * 60)
         print(improvement_suggestions)
 
@@ -468,12 +588,12 @@ Output:"""
 
     def _save_improvement_suggestions(self, suggestions: str):
         """保存改进建议到文件"""
-        output_file = "claim_type_improvement_suggestions.md"
+        output_file = "fact_extraction_improvement_suggestions.md"
         try:
             with open(output_file, 'w', encoding='utf-8') as f:
-                f.write("# 陈述类型定义改进建议\n\n")
+                f.write("# 修仙小说事实提取改进建议\n\n")
                 f.write(f"生成时间: {self._get_current_time()}\n")
-                f.write(f"分析片段数: {len(self.exploration_results)}\n\n")
+                f.write(f"评估片段数: {len(self.evaluation_results)}\n\n")
                 f.write(suggestions)
 
             print(f"\n改进建议已保存到: {output_file}")
@@ -488,7 +608,7 @@ Output:"""
 
 def main():
     """主函数"""
-    parser = argparse.ArgumentParser(description='陈述类型探索器')
+    parser = argparse.ArgumentParser(description='修仙小说事实提取评估器')
     parser.add_argument('--file', '-f', default="resources/ignored/1.txt",
                        help='小说文件路径 (默认: resources/ignored/1.txt)')
     parser.add_argument('--name', '-n', default="fanren",
@@ -498,8 +618,8 @@ def main():
 
     args = parser.parse_args()
 
-    explorer = ClaimTypeExplorer()
-    explorer.run_exploration(
+    evaluator = FactExtractionEvaluator()
+    evaluator.run_evaluation(
         novel_file=args.file,
         novel_name=args.name,
         fragment_count=args.count
