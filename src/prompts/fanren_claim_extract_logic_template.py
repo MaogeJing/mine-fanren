@@ -239,7 +239,7 @@ FANREN_CLAIM_EXTRACT_LOGIC_TEMPLATE = PromptTemplate.create_template(
 
 步骤3：提取事实
 对每个识别出的事实，提取以下信息：
-  - 事实类型：F1-F10及子类型（如F1.3）
+  - 事实类型：完整的类型描述（如: "能力获得/提升-境界突破"）
   - 主体实体：事实的核心实体
   - 事实内容：用一句话概括核心事实
   - 原文引用：支持该事实的原文片段
@@ -264,7 +264,7 @@ FANREN_CLAIM_EXTRACT_LOGIC_TEMPLATE = PromptTemplate.create_template(
 ```
 
 **格式说明：**
-- **事实类型**: F1-F10及子类型（如F1.3, F9.1等）
+- **事实类型**: 完整的类型描述（如: "能力获得/提升-境界突破", "战斗过程-生死搏杀"）
 - **主体实体**: 事实的核心实体
 - **事实内容**: 简洁完整的事实描述，战斗类事实需包含关键要素（参与者、起因、过程、结果等）
 - **原文引用**: 支持该事实的原文片段
@@ -281,9 +281,9 @@ FANREN_CLAIM_EXTRACT_LOGIC_TEMPLATE = PromptTemplate.create_template(
 韩立服下筑基丹后，立刻盘膝坐下开始冲击筑基期。三个月后，他终于成功突破，从练气13层晋升为筑基初期修士。突破后，他发现丹田中凝聚出一颗金色的筑基道基。
 
 输出：
-(F1.3{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立从练气13层突破至筑基初期{TUPLE_DELIMITER}三个月后，他终于成功突破，从练气13层晋升为筑基初期修士。突破后，他发现丹田中凝聚出一颗金色的筑基道基。)
+(能力获得/提升-境界突破{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立从练气13层突破至筑基初期{TUPLE_DELIMITER}三个月后，他终于成功突破，从练气13层晋升为筑基初期修士。突破后，他发现丹田中凝聚出一颗金色的筑基道基。)
 {RECORD_DELIMITER}
-(F2.7{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立消耗筑基丹用于突破境界{TUPLE_DELIMITER}韩立服下筑基丹后，立刻盘膝坐下开始冲击筑基期。)
+(资源流转-资源消耗-丹药消耗{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立消耗筑基丹用于突破境界{TUPLE_DELIMITER}韩立服下筑基丹后，立刻盘膝坐下开始冲击筑基期。)
 {COMPLETION_DELIMITER}
 
 ========================================
@@ -294,13 +294,13 @@ FANREN_CLAIM_EXTRACT_LOGIC_TEMPLATE = PromptTemplate.create_template(
 韩立与血刀门长老因争夺千年灵芝发生冲突。长老是假丹期修为，还带着两名筑基初期弟子，韩立只有筑基后期修为，明显处于劣势。开始时韩立祭出青竹蜂云剑试探，发现对方防御极强。激战半个时辰后，韩立被逼入绝境。就在此时，他突然放出十二只成熟体噬金虫，虫群瞬间啃噬了血刀门长老的护身法宝。长老大惊，施展血遁术逃离，两名弟子被韩立击杀。韩立获得了两个储物袋和受损的血刀，但也消耗了三张金刚符。此战后，韩立与血刀门结下死仇，而噬金虫的底牌也被长老知晓。
 
 输出：
-(F9.1{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立与血刀门长老等人战斗，参与者韩立vs血刀门长老+2弟子，实力对比劣势，起因争夺灵芝，过程试探→激战→绝境→底牌，结果击杀2人获得战利品，结仇并暴露底牌{TUPLE_DELIMITER}韩立与血刀门长老因争夺千年灵芝发生冲突。长老是假丹期修为，还带着两名筑基初期弟子，韩立只有筑基后期修为，明显处于劣势。开始时韩立祭出青竹蜂云剑试探，发现对方防御极强。激战半个时辰后，韩立被逼入绝境。就在此时，他突然放出十二只成熟体噬金虫，虫群瞬间啃噬了血刀门长老的护身法宝。长老大惊，施展血遁术逃离，两名弟子被韩立击杀。)
+(战斗过程-生死搏杀{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立与血刀门长老等人战斗，参与者韩立vs血刀门长老+2弟子，实力对比劣势，起因争夺灵芝，过程试探→激战→绝境→底牌，结果击杀2人获得战利品，结仇并暴露底牌{TUPLE_DELIMITER}韩立与血刀门长老因争夺千年灵芝发生冲突。长老是假丹期修为，还带着两名筑基初期弟子，韩立只有筑基后期修为，明显处于劣势。开始时韩立祭出青竹蜂云剑试探，发现对方防御极强。激战半个时辰后，韩立被逼入绝境。就在此时，他突然放出十二只成熟体噬金虫，虫群瞬间啃噬了血刀门长老的护身法宝。长老大惊，施展血遁术逃离，两名弟子被韩立击杀。)
 {RECORD_DELIMITER}
-(F3.1{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立与血刀门结下死仇{TUPLE_DELIMITER}此战后，韩立与血刀门结下死仇，而噬金虫的底牌也被长老知晓。)
+(关系网络-关系建立-结仇{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立与血刀门结下死仇{TUPLE_DELIMITER}此战后，韩立与血刀门结下死仇，而噬金虫的底牌也被长老知晓。)
 {RECORD_DELIMITER}
-(F4.2{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立拥有成熟体噬金虫的底牌被血刀门长老知晓{TUPLE_DELIMITER}长老大惊，施展血遁术逃离，两名弟子被韩立击杀。此战后，韩立与血刀门结下死仇，而噬金虫的底牌也被长老知晓。)
+(身份认知-身份认知-底牌暴露{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立拥有成熟体噬金虫的底牌被血刀门长老知晓{TUPLE_DELIMITER}长老大惊，施展血遁术逃离，两名弟子被韩立击杀。此战后，韩立与血刀门结下死仇，而噬金虫的底牌也被长老知晓。)
 {RECORD_DELIMITER}
-(F2.1{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立获得两个储物袋和受损的血刀{TUPLE_DELIMITER}韩立获得了两个储物袋和受损的血刀，但也消耗了三张金刚符。)
+(资源流转-资源获得-法宝获得{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立获得两个储物袋和受损的血刀{TUPLE_DELIMITER}韩立获得了两个储物袋和受损的血刀，但也消耗了三张金刚符。)
 {COMPLETION_DELIMITER}
 
 ========================================
@@ -311,13 +311,13 @@ FANREN_CLAIM_EXTRACT_LOGIC_TEMPLATE = PromptTemplate.create_template(
 韩立进入上古洞府后，在石室中发现了一枚噬金虫卵和一本《青元剑诀》。他小心将虫卵收入储物袋，又花了三天时间将剑诀抄录下来。临走前，他听到洞府深处传来奇怪的声响，但考虑到自己实力不足，最终放弃了深入探索的念头。
 
 输出：
-(F10.1{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立进入上古洞府探索，发现噬金虫卵和青元剑诀{TUPLE_DELIMITER}韩立进入上古洞府后，在石室中发现了一枚噬金虫卵和一本《青元剑诀》。他小心将虫卵收入储物袋，又花了三天时间将剑诀抄录下来。)
+(探索冒险-秘境探索-洞府探索{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立进入上古洞府探索，发现噬金虫卵和青元剑诀{TUPLE_DELIMITER}韩立进入上古洞府后，在石室中发现了一枚噬金虫卵和一本《青元剑诀》。他小心将虫卵收入储物袋，又花了三天时间将剑诀抄录下来。)
 {RECORD_DELIMITER}
-(F2.5{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立获得噬金虫卵{TUPLE_DELIMITER}在石室中发现了一枚噬金虫卵。他小心将虫卵收入储物袋。)
+(资源流转-资源获得-灵兽获得{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立获得噬金虫卵{TUPLE_DELIMITER}在石室中发现了一枚噬金虫卵。他小心将虫卵收入储物袋。)
 {RECORD_DELIMITER}
-(F1.1{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立获得《青元剑诀》功法{TUPLE_DELIMITER}发现一本《青元剑诀》。又花了三天时间将剑诀抄录下来。)
+(能力获得/提升-功法习得{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立获得《青元剑诀》功法{TUPLE_DELIMITER}发现一本《青元剑诀》。又花了三天时间将剑诀抄录下来。)
 {RECORD_DELIMITER}
-(F7.2{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}洞府深处有奇怪声响但未探索{TUPLE_DELIMITER}他听到洞府深处传来奇怪的声响，但考虑到自己实力不足，最终放弃了深入探索的念头。)
+(因果链-伏笔回收-未探索伏笔{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}洞府深处有奇怪声响但未探索{TUPLE_DELIMITER}他听到洞府深处传来奇怪的声响，但考虑到自己实力不足，最终放弃了深入探索的念头。)
 {COMPLETION_DELIMITER}
 
 ========================================

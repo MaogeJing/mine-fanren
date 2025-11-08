@@ -8,6 +8,7 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field, field_validator
 import uuid
+from datetime import datetime
 
 
 class ChapterChunk(BaseModel):
@@ -249,3 +250,116 @@ class PromptTemplateBundle(BaseModel):
     def __len__(self):
         """支持len()"""
         return len(self.templates)
+
+
+class Claim(BaseModel):
+    """单个陈述/事实数据结构"""
+
+    # 基本信息
+    claim_id: str = Field(description="陈述唯一标识符(UUID)")
+    claim_type: str = Field(description="陈述类型 (如: 能力获得/提升-境界突破, 战斗过程-生死搏杀)")
+    main_entity: str = Field(description="主体实体")
+    claim_content: str = Field(description="陈述内容")
+    source_text: str = Field(description="原文引用")
+
+    # 关联信息
+    chapter_id: int = Field(description="所属章节编号")
+    novel_name: str = Field(description="小说名称")
+    chunk_id: str = Field(description="所属章节块ID")
+
+    # 元数据
+    created_at: datetime = Field(description="创建时间", default_factory=datetime.now)
+    confidence: Optional[float] = Field(description="置信度 (0-1)", default=None)
+
+    @classmethod
+    def create_claim(
+        cls,
+        claim_type: str,
+        main_entity: str,
+        claim_content: str,
+        source_text: str,
+        chapter_id: int,
+        novel_name: str,
+        chunk_id: str,
+        confidence: Optional[float] = None
+    ) -> "Claim":
+        """创建陈述实例"""
+        return cls(
+            claim_id=uuid.uuid4().hex.replace('-', ''),
+            claim_type=claim_type,
+            main_entity=main_entity,
+            claim_content=claim_content,
+            source_text=source_text,
+            chapter_id=chapter_id,
+            novel_name=novel_name,
+            chunk_id=chunk_id,
+            confidence=confidence
+        )
+
+    def __str__(self) -> str:
+        return f"Claim(type={self.claim_type}, entity={self.main_entity}, chapter={self.chapter_id})"
+
+
+class ChapterClaim(BaseModel):
+    """章节陈述提取结果"""
+
+    # 基本信息
+    chapter_id: int = Field(description="章节编号")
+    chapter_title: str = Field(description="章节标题")
+    novel_name: str = Field(description="小说名称")
+    chunk_id: str = Field(description="所属章节块ID")
+
+    # 提取结果
+    claims: List[Claim] = Field(description="提取到的陈述列表", default_factory=list)
+
+    # 统计信息
+    total_claims: int = Field(description="总陈述数量", default=0)
+    extraction_success: bool = Field(description="提取是否成功", default=True)
+    extraction_error: Optional[str] = Field(description="提取错误信息", default=None)
+
+    # 元数据
+    extraction_time: datetime = Field(description="提取时间", default_factory=datetime.now)
+    processing_time_seconds: Optional[float] = Field(description="处理耗时(秒)", default=None)
+
+    @classmethod
+    def create_chapter_claim(
+        cls,
+        chapter_id: int,
+        chapter_title: str,
+        novel_name: str,
+        claims: List[Claim],
+        chunk_id: str,
+        extraction_error: Optional[str] = None,
+        processing_time_seconds: Optional[float] = None
+    ) -> "ChapterClaim":
+        """创建章节陈述实例"""
+        return cls(
+            chapter_id=chapter_id,
+            chapter_title=chapter_title,
+            novel_name=novel_name,
+            chunk_id=chunk_id,
+            claims=claims,
+            total_claims=len(claims),
+            extraction_success=extraction_error is None,
+            extraction_error=extraction_error,
+            processing_time_seconds=processing_time_seconds
+        )
+
+    def get_claims_by_type(self, claim_type: str) -> List[Claim]:
+        """获取指定类型的所有陈述"""
+        return [claim for claim in self.claims if claim.claim_type.startswith(claim_type)]
+
+    def get_claims_by_entity(self, entity: str) -> List[Claim]:
+        """获取指定实体的所有陈述"""
+        return [claim for claim in self.claims if claim.main_entity == entity]
+
+    def get_claim_types(self) -> List[str]:
+        """获取所有陈述类型"""
+        return list(set(claim.claim_type for claim in self.claims))
+
+    def get_main_entities(self) -> List[str]:
+        """获取所有主体实体"""
+        return list(set(claim.main_entity for claim in self.claims))
+
+    def __str__(self) -> str:
+        return f"ChapterClaim(chapter={self.chapter_id}, claims={self.total_claims}, success={self.extraction_success})"
