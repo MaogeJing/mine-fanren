@@ -258,11 +258,16 @@ FANREN_CLAIM_EXTRACT_LOGIC_TEMPLATE = PromptTemplate.create_template(
 
 步骤5：输出格式
 
-普通事实格式（F1-F8, F10）：
-(<事实类型>{TUPLE_DELIMITER}<主体实体>{TUPLE_DELIMITER}<事实内容>{TUPLE_DELIMITER}<原文引用>{TUPLE_DELIMITER}<叙事功能>{TUPLE_DELIMITER}<关联实体>)
+### 统一事实格式（所有类型F1-F10）：
+```
+(<事实类型>{TUPLE_DELIMITER}<主体实体>{TUPLE_DELIMITER}<事实内容>{TUPLE_DELIMITER}<原文引用>)
+```
 
-战斗事实格式（F9）：
-(<事实类型>{TUPLE_DELIMITER}<主体实体>{TUPLE_DELIMITER}<参与者>{TUPLE_DELIMITER}<实力对比>{TUPLE_DELIMITER}<战斗起因>{TUPLE_DELIMITER}<关键过程>{TUPLE_DELIMITER}<战斗手段>{TUPLE_DELIMITER}<战斗结果>{TUPLE_DELIMITER}<后续影响>{TUPLE_DELIMITER}<原文引用>)
+**格式说明：**
+- **事实类型**: F1-F10及子类型（如F1.3, F9.1等）
+- **主体实体**: 事实的核心实体
+- **事实内容**: 简洁完整的事实描述，战斗类事实需包含关键要素（参与者、起因、过程、结果等）
+- **原文引用**: 支持该事实的原文片段
 
 多个事实之间用 {RECORD_DELIMITER} 分隔
 
@@ -276,9 +281,9 @@ FANREN_CLAIM_EXTRACT_LOGIC_TEMPLATE = PromptTemplate.create_template(
 韩立服下筑基丹后，立刻盘膝坐下开始冲击筑基期。三个月后，他终于成功突破，从练气13层晋升为筑基初期修士。突破后，他发现丹田中凝聚出一颗金色的筑基道基。
 
 输出：
-(F1.3{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立从练气13层突破至筑基初期{TUPLE_DELIMITER}三个月后，他终于成功突破，从练气13层晋升为筑基初期修士{TUPLE_DELIMITER}推动情节{TUPLE_DELIMITER}筑基丹,筑基期)
+(F1.3{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立从练气13层突破至筑基初期{TUPLE_DELIMITER}三个月后，他终于成功突破，从练气13层晋升为筑基初期修士。突破后，他发现丹田中凝聚出一颗金色的筑基道基。)
 {RECORD_DELIMITER}
-(F2.7{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立消耗筑基丹用于突破境界{TUPLE_DELIMITER}韩立服下筑基丹后，立刻盘膝坐下开始冲击筑基期{TUPLE_DELIMITER}展示代价{TUPLE_DELIMITER}筑基丹)
+(F2.7{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立消耗筑基丹用于突破境界{TUPLE_DELIMITER}韩立服下筑基丹后，立刻盘膝坐下开始冲击筑基期。)
 {COMPLETION_DELIMITER}
 
 ========================================
@@ -289,13 +294,13 @@ FANREN_CLAIM_EXTRACT_LOGIC_TEMPLATE = PromptTemplate.create_template(
 韩立与血刀门长老因争夺千年灵芝发生冲突。长老是假丹期修为，还带着两名筑基初期弟子，韩立只有筑基后期修为，明显处于劣势。开始时韩立祭出青竹蜂云剑试探，发现对方防御极强。激战半个时辰后，韩立被逼入绝境。就在此时，他突然放出十二只成熟体噬金虫，虫群瞬间啃噬了血刀门长老的护身法宝。长老大惊，施展血遁术逃离，两名弟子被韩立击杀。韩立获得了两个储物袋和受损的血刀，但也消耗了三张金刚符。此战后，韩立与血刀门结下死仇，而噬金虫的底牌也被长老知晓。
 
 输出：
-(F9.1{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}己方：韩立（筑基后期） vs 敌方：血刀门长老（假丹期）+2名弟子（筑基初期）{TUPLE_DELIMITER}己方劣势（1v3，境界差距）{TUPLE_DELIMITER}争夺千年灵芝{TUPLE_DELIMITER}试探：青竹蜂云剑对轰，发现对方防御强→转折：激战半小时被逼入绝境→底牌：放出噬金虫啃噬法宝→结果：击杀2弟子，长老血遁逃离{TUPLE_DELIMITER}青竹蜂云剑、噬金虫×12、金刚符×3{TUPLE_DELIMITER}胜，击杀2人，获得储物袋×2、受损血刀，消耗金刚符×3{TUPLE_DELIMITER}结仇（F3.1）、底牌暴露（F4.2）{TUPLE_DELIMITER}韩立与血刀门长老因争夺千年灵芝发生冲突。长老是假丹期修为，还带着两名筑基初期弟子，韩立只有筑基后期修为，明显处于劣势。开始时韩立祭出青竹蜂云剑试探，发现对方防御极强。激战半个时辰后，韩立被逼入绝境。就在此时，他突然放出十二只成熟体噬金虫，虫群瞬间啃噬了血刀门长老的护身法宝。长老大惊，施展血遁术逃离，两名弟子被韩立击杀。韩立获得了两个储物袋和受损的血刀，但也消耗了三张金刚符。此战后，韩立与血刀门结下死仇，而噬金虫的底牌也被长老知晓。)
+(F9.1{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立与血刀门长老等人战斗，参与者韩立vs血刀门长老+2弟子，实力对比劣势，起因争夺灵芝，过程试探→激战→绝境→底牌，结果击杀2人获得战利品，结仇并暴露底牌{TUPLE_DELIMITER}韩立与血刀门长老因争夺千年灵芝发生冲突。长老是假丹期修为，还带着两名筑基初期弟子，韩立只有筑基后期修为，明显处于劣势。开始时韩立祭出青竹蜂云剑试探，发现对方防御极强。激战半个时辰后，韩立被逼入绝境。就在此时，他突然放出十二只成熟体噬金虫，虫群瞬间啃噬了血刀门长老的护身法宝。长老大惊，施展血遁术逃离，两名弟子被韩立击杀。)
 {RECORD_DELIMITER}
-(F3.1{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立与血刀门结下死仇{TUPLE_DELIMITER}此战后，韩立与血刀门结下死仇{TUPLE_DELIMITER}埋下伏笔{TUPLE_DELIMITER}血刀门,血刀门长老)
+(F3.1{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立与血刀门结下死仇{TUPLE_DELIMITER}此战后，韩立与血刀门结下死仇，而噬金虫的底牌也被长老知晓。)
 {RECORD_DELIMITER}
-(F4.2{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立拥有成熟体噬金虫的底牌被血刀门长老知晓{TUPLE_DELIMITER}噬金虫的底牌也被长老知晓{TUPLE_DELIMITER}揭示信息{TUPLE_DELIMITER}噬金虫,血刀门长老)
+(F4.2{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立拥有成熟体噬金虫的底牌被血刀门长老知晓{TUPLE_DELIMITER}长老大惊，施展血遁术逃离，两名弟子被韩立击杀。此战后，韩立与血刀门结下死仇，而噬金虫的底牌也被长老知晓。)
 {RECORD_DELIMITER}
-(F2.1{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立获得两个储物袋和受损的血刀{TUPLE_DELIMITER}韩立获得了两个储物袋和受损的血刀{TUPLE_DELIMITER}展示收获{TUPLE_DELIMITER}储物袋,血刀)
+(F2.1{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立获得两个储物袋和受损的血刀{TUPLE_DELIMITER}韩立获得了两个储物袋和受损的血刀，但也消耗了三张金刚符。)
 {COMPLETION_DELIMITER}
 
 ========================================
@@ -306,43 +311,44 @@ FANREN_CLAIM_EXTRACT_LOGIC_TEMPLATE = PromptTemplate.create_template(
 韩立进入上古洞府后，在石室中发现了一枚噬金虫卵和一本《青元剑诀》。他小心将虫卵收入储物袋，又花了三天时间将剑诀抄录下来。临走前，他听到洞府深处传来奇怪的声响，但考虑到自己实力不足，最终放弃了深入探索的念头。
 
 输出：
-(F10.1{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立进入上古洞府探索{TUPLE_DELIMITER}韩立进入上古洞府后，在石室中发现了一枚噬金虫卵和一本《青元剑诀》{TUPLE_DELIMITER}推动情节{TUPLE_DELIMITER}上古洞府,噬金虫,青元剑诀)
+(F10.1{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立进入上古洞府探索，发现噬金虫卵和青元剑诀{TUPLE_DELIMITER}韩立进入上古洞府后，在石室中发现了一枚噬金虫卵和一本《青元剑诀》。他小心将虫卵收入储物袋，又花了三天时间将剑诀抄录下来。)
 {RECORD_DELIMITER}
-(F2.5{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立获得噬金虫卵{TUPLE_DELIMITER}在石室中发现了一枚噬金虫卵。他小心将虫卵收入储物袋{TUPLE_DELIMITER}展示收获{TUPLE_DELIMITER}噬金虫)
+(F2.5{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立获得噬金虫卵{TUPLE_DELIMITER}在石室中发现了一枚噬金虫卵。他小心将虫卵收入储物袋。)
 {RECORD_DELIMITER}
-(F1.1{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立获得《青元剑诀》功法{TUPLE_DELIMITER}发现一本《青元剑诀》。又花了三天时间将剑诀抄录下来{TUPLE_DELIMITER}展示收获{TUPLE_DELIMITER}青元剑诀)
+(F1.1{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}韩立获得《青元剑诀》功法{TUPLE_DELIMITER}发现一本《青元剑诀》。又花了三天时间将剑诀抄录下来。)
 {RECORD_DELIMITER}
-(F7.2{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}洞府深处有奇怪声响但未探索{TUPLE_DELIMITER}他听到洞府深处传来奇怪的声响，但考虑到自己实力不足，最终放弃了深入探索的念头{TUPLE_DELIMITER}埋下伏笔{TUPLE_DELIMITER}上古洞府)
+(F7.2{TUPLE_DELIMITER}韩立{TUPLE_DELIMITER}洞府深处有奇怪声响但未探索{TUPLE_DELIMITER}他听到洞府深处传来奇怪的声响，但考虑到自己实力不足，最终放弃了深入探索的念头。)
 {COMPLETION_DELIMITER}
 
 ========================================
 注意事项
 ========================================
 
-1. 战斗提取优先级：
+1. 格式统一：
+   所有类型（F1-F10）都使用统一的4字段格式
+   战斗类事实的详细信息（参与者、起因、过程、结果等）都要压缩到"事实内容"字段中
+
+2. 战斗提取要求：
    完整战斗（有起因、过程、结果）必须提取为F9
    战斗中的能力使用、资源消耗、关系变化等，同时提取为对应类型
    小冲突（3句话内）不提取
 
-2. 避免重复提取：
+3. 避免重复提取：
    同一事实不要重复提取
-   如果一个事件同时属于多个类型，分别提取但在关联实体中标注
+   如果一个事件同时属于多个类型，分别提取但保持主体实体一致
 
-3. 伏笔识别：
-   F7类型只提取当前章节埋下的伏笔，不需要判断是否在后续章节回收
-   明确提到但未立即使用/验证的内容才算伏笔
+4. 事实内容描述：
+   简洁但完整，包含关键信息
+   战斗类事实必须包含：参与者、起因、过程、结果等要素
+   普通事实要清晰说明核心事件
 
-4. 原文引用：
-   尽量引用完整的句子
+5. 原文引用：
+   尽量引用完整的句子或关键段落
    如果事实跨越多个句子，可以用省略号连接关键部分
 
-5. 叙事功能选择：
-   每个事实只选一个最主要的功能
-   可选项：展示实力/制造悬念/推动情节/揭示信息/建立对比/埋下伏笔
-
-6. 实体识别：
-   主体实体：事实的核心对象（通常是主角或重要角色）
-   关联实体：事实中涉及的其他对象（角色、法宝、地点、势力等）
+6. 主体实体识别：
+   选择事实的核心对象（通常是主角或重要角色）
+   如果涉及多个同等重要的实体，选择最主要的那个
 
 ========================================
 实际数据
