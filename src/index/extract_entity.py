@@ -145,44 +145,6 @@ class EntityExtractor:
 
         return results
 
-    def get_extraction_statistics(self, results: List[ChapterEntity]) -> dict:
-        """
-        获取提取统计信息
-
-        Args:
-            results: 章节实体提取结果列表
-
-        Returns:
-            dict: 统计信息
-        """
-        total_chapters = len(results)
-        successful_chapters = sum(1 for r in results if r.extraction_success)
-        total_entities = sum(r.total_entities for r in results)
-
-        # 按类型统计
-        entity_types = {}
-        for result in results:
-            for entity in result.entities:
-                entity_type = entity.entity_type.split('-')[0]  # 取主类型
-                entity_types[entity_type] = entity_types.get(entity_type, 0) + 1
-
-        # 按名称统计
-        entity_names = {}
-        for result in results:
-            for entity in result.entities:
-                name = entity.entity_name
-                entity_names[name] = entity_names.get(name, 0) + 1
-
-        return {
-            "total_chapters": total_chapters,
-            "successful_chapters": successful_chapters,
-            "success_rate": successful_chapters / total_chapters if total_chapters > 0 else 0,
-            "total_entities": total_entities,
-            "avg_entities_per_chapter": total_entities / successful_chapters if successful_chapters > 0 else 0,
-            "entity_types": entity_types,
-            "top_entities": sorted(entity_names.items(), key=lambda x: x[1], reverse=True)[:10]
-        }
-
 
 def extract_entities_from_chunk(chunk: ChapterChunk) -> ChapterEntity:
     """
