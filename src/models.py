@@ -363,3 +363,163 @@ class ChapterClaim(BaseModel):
 
     def __str__(self) -> str:
         return f"ChapterClaim(chapter={self.chapter_id}, claims={self.total_claims}, success={self.extraction_success})"
+
+
+class Entity(BaseModel):
+    """实体数据结构"""
+
+    # 基本信息
+    entity_id: str = Field(description="实体唯一标识符(UUID)")
+    entity_type: str = Field(description="实体类型 (如: 角色-主角, 物品-法宝武器, 能力-功法秘籍)")
+    entity_name: str = Field(description="实体名称")
+    entity_description: str = Field(description="实体详细描述")
+    source_text: str = Field(description="原文引用")
+
+    # 关联信息
+    chapter_id: int = Field(description="所属章节编号")
+    novel_name: str = Field(description="小说名称")
+    chunk_id: str = Field(description="所属章节块ID")
+
+    # 元数据
+    created_at: datetime = Field(description="创建时间", default_factory=datetime.now)
+    confidence: Optional[float] = Field(description="置信度 (0-1)", default=None)
+
+    @classmethod
+    def create_entity(
+        cls,
+        entity_type: str,
+        entity_name: str,
+        entity_description: str,
+        source_text: str,
+        chapter_id: int,
+        novel_name: str,
+        chunk_id: str,
+        confidence: Optional[float] = None
+    ) -> "Entity":
+        """创建实体实例"""
+        return cls(
+            entity_id=uuid.uuid4().hex.replace('-', ''),
+            entity_type=entity_type,
+            entity_name=entity_name,
+            entity_description=entity_description,
+            source_text=source_text,
+            chapter_id=chapter_id,
+            novel_name=novel_name,
+            chunk_id=chunk_id,
+            confidence=confidence
+        )
+
+    def __str__(self) -> str:
+        return f"Entity(type={self.entity_type}, name={self.entity_name}, chapter={self.chapter_id})"
+
+
+class ChapterEntity(BaseModel):
+    """章节实体提取结果"""
+
+    # 基本信息
+    chapter_id: int = Field(description="章节编号")
+    chapter_title: str = Field(description="章节标题")
+    novel_name: str = Field(description="小说名称")
+    chunk_id: str = Field(description="所属章节块ID")
+
+    # 提取结果
+    entities: List[Entity] = Field(description="提取到的实体列表", default_factory=list)
+
+    # 统计信息
+    total_entities: int = Field(description="总实体数量", default=0)
+    extraction_success: bool = Field(description="提取是否成功", default=True)
+    extraction_error: Optional[str] = Field(description="提取错误信息", default=None)
+
+    # 元数据
+    extraction_time: datetime = Field(description="提取时间", default_factory=datetime.now)
+    processing_time_seconds: Optional[float] = Field(description="处理耗时(秒)", default=None)
+
+    @classmethod
+    def create_chapter_entity(
+        cls,
+        chapter_id: int,
+        chapter_title: str,
+        novel_name: str,
+        entities: List[Entity],
+        chunk_id: str,
+        extraction_error: Optional[str] = None,
+        processing_time_seconds: Optional[float] = None
+    ) -> "ChapterEntity":
+        """创建章节实体实例"""
+        return cls(
+            chapter_id=chapter_id,
+            chapter_title=chapter_title,
+            novel_name=novel_name,
+            chunk_id=chunk_id,
+            entities=entities,
+            total_entities=len(entities),
+            extraction_success=extraction_error is None,
+            extraction_error=extraction_error,
+            processing_time_seconds=processing_time_seconds
+        )
+
+    def get_entities_by_type(self, entity_type: str) -> List[Entity]:
+        """获取指定类型的所有实体"""
+        return [entity for entity in self.entities if entity.entity_type.startswith(entity_type)]
+
+    def get_entity_types(self) -> List[str]:
+        """获取所有实体类型"""
+        return list(set(entity.entity_type for entity in self.entities))
+
+    def get_entity_names(self) -> List[str]:
+        """获取所有实体名称"""
+        return list(set(entity.entity_name for entity in self.entities))
+
+    def __str__(self) -> str:
+        return f"ChapterEntity(chapter={self.chapter_id}, entities={self.total_entities}, success={self.extraction_success})"
+
+
+class EntityExtraction(BaseModel):
+    """单个实体提取结果 - 用于 LangChain structured output"""
+
+    entity_type: str = Field(
+        description="实体类型，如：角色-主角、角色-配角、物品-法宝武器、能力-功法秘籍、组织-宗门势力、地点-宗门驻地等"
+    )
+    entity_name: str = Field(description="实体名称")
+    entity_description: str = Field(
+        description="实体的详细描述，包括特征、作用、重要性、剧情意义等"
+    )
+    source_text: str = Field(description="支持该实体识别的原文引用")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "entity_type": "角色-主角",
+                "entity_name": "韩立",
+                "entity_description": "本书主角，出身青州小山村，机缘巧合加入七玄门开始修仙之路",
+                "source_text": "韩立，字厉，出身青州小山村，机缘巧合下加入七玄门。"
+            }
+        }
+
+
+class EntityListResponse(BaseModel):
+    """实体提取的结构化输出响应模型 - 用于 LangChain structured output"""
+
+    entities: List[EntityExtraction] = Field(
+        description="提取到的实体列表，包含所有对理解剧情发展有重要价值的核心实体"
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "entities": [
+                    {
+                        "entity_type": "角色-主角",
+                        "entity_name": "韩立",
+                        "entity_description": "本书主角，出身青州小山村，机缘巧合加入七玄门开始修仙之路",
+                        "source_text": "韩立，字厉，出身青州小山村，机缘巧合下加入七玄门。"
+                    },
+                    {
+                        "entity_type": "组织-宗门势力",
+                        "entity_name": "七玄门",
+                        "entity_description": "韩立最初加入的修仙门派，提供了基础的修仙指导",
+                        "source_text": "在七玄门中，他学会了《青元剑诀》这部基础功法"
+                    }
+                ]
+            }
+        }
