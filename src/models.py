@@ -486,16 +486,6 @@ class EntityExtraction(BaseModel):
     )
     source_text: str = Field(description="支持该实体识别的原文引用")
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "entity_type": "角色-主角",
-                "entity_name": "韩立",
-                "entity_description": "本书主角，出身青州小山村，机缘巧合加入七玄门开始修仙之路",
-                "source_text": "韩立，字厉，出身青州小山村，机缘巧合下加入七玄门。"
-            }
-        }
-
 
 class EntityListResponse(BaseModel):
     """实体提取的结构化输出响应模型 - 用于 LangChain structured output"""
@@ -503,23 +493,3 @@ class EntityListResponse(BaseModel):
     entities: List[EntityExtraction] = Field(
         description="提取到的实体列表，包含所有对理解剧情发展有重要价值的核心实体"
     )
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "entities": [
-                    {
-                        "entity_type": "角色-主角",
-                        "entity_name": "韩立",
-                        "entity_description": "本书主角，出身青州小山村，机缘巧合加入七玄门开始修仙之路",
-                        "source_text": "韩立，字厉，出身青州小山村，机缘巧合下加入七玄门。"
-                    },
-                    {
-                        "entity_type": "组织-宗门势力",
-                        "entity_name": "七玄门",
-                        "entity_description": "韩立最初加入的修仙门派，提供了基础的修仙指导",
-                        "source_text": "在七玄门中，他学会了《青元剑诀》这部基础功法"
-                    }
-                ]
-            }
-        }
