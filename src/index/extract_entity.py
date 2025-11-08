@@ -16,7 +16,7 @@ load_dotenv()
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from ..models import ChapterChunk, Entity, ChapterEntity, EntityListResponse
+from ..models import ChapterChunk, Entity, ChapterEntity, EntityListResponse, EntityExtraction
 from ..prompts.fanren_entity_extract_structured_template import FANREN_ENTITY_EXTRACT_STRUCTURED_TEMPLATE
 
 
@@ -77,12 +77,21 @@ class EntityExtractor:
 
             # 3. 直接获得结构化输出
             structured_result = self.structured_llm.invoke(messages)
+            print(f"DEBUG: structured_result type: {type(structured_result)}")
+            print(f"DEBUG: structured_result content: {structured_result}")
+
             if not isinstance(structured_result, EntityListResponse):
-                raise ValueError(f"Expected EntityListResponse, got {type(structured_result)}")
+                raise ValueError(f"Expected EntityListResponse, got {type(structured_result)}: {structured_result}")
 
             # 4. 转换为 Entity 对象
             entities = []
-            for extraction in structured_result.entities:
+            print(f"DEBUG: structured_result.entities type: {type(structured_result.entities)}")
+            print(f"DEBUG: structured_result.entities length: {len(structured_result.entities)}")
+
+            for i, extraction in enumerate(structured_result.entities):
+                print(f"DEBUG: processing entity {i}: {extraction}")
+                if not isinstance(extraction, EntityExtraction):
+                    raise ValueError(f"Expected EntityExtraction, got {type(extraction)}: {extraction}")
                 entity = Entity.create_entity(
                     entity_type=extraction.entity_type,
                     entity_name=extraction.entity_name,
