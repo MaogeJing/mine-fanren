@@ -5,8 +5,9 @@ SQLite DQL (Data Query Language) 操作
 包含章节块的增删改查操作
 """
 from typing import List, Dict
+import json
 from sqlite3 import Connection
-from ..models import ChapterChunk
+from ..models import ChapterChunk, PromptTemplate, PromptTemplateBundle
 
 
 class ChapterChunkRepo:
@@ -179,4 +180,149 @@ class ChapterChunkRepo:
             pos_start=row['pos_start'] or 0,
             pos_end=row['pos_end'] or 0,
             token_count=row['token_count'] or 0
+        )
+
+
+class PromptTemplateRepo:
+    """提示词模板数据仓库类，专注于 prompt_templates 表的操作"""
+
+    @staticmethod
+    def upsert_template(conn: Connection, template: PromptTemplate) -> int:
+        """
+        插入或更新提示词模板
+
+        Args:
+            conn: 数据库连接对象（由上层管理生命周期）
+            template: 提示词模板对象
+
+        Returns:
+            int: 成功处理的行数
+
+        Raises:
+            SQLiteStorageError: 数据库操作失败
+        """
+        sql = """
+        INSERT INTO prompt_templates
+        (template_key, version, description, template_content, required_params, language, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(template_key, version) DO UPDATE SET
+            description = excluded.description,
+            template_content = excluded.template_content,
+            required_params = excluded.required_params,
+            language = excluded.language,
+            notes = excluded.notes,
+            updated_at = CURRENT_TIMESTAMP
+        """
+
+        params = (
+            template.template_key,
+            template.version,
+            template.description,
+            template.template_content,
+            json.dumps(template.required_params, ensure_ascii=False),
+            template.language,
+            template.notes
+        )
+
+        cursor = conn.execute(sql, params)
+        return cursor.rowcount
+
+    @staticmethod
+    def get_template_bundle(conn: Connection, template_key: str) -> PromptTemplateBundle:
+        """
+        根据模板Key获取所有版本的提示词模板（模板包）
+
+        Args:
+            conn: 数据库连接对象（由上层管理生命周期）
+            template_key: 模板Key
+
+        Returns:
+            PromptTemplateBundle: 该模板Key的所有版本组成的模板包
+
+        Raises:
+            SQLiteStorageError: 数据库操作失败
+            ValueError: 如果模板不存在
+
+        Returns:
+            PromptTemplateBundle: 模板包对象
+        """
+        sql = """
+        SELECT * FROM prompt_templates
+        WHERE template_key = ?
+        ORDER BY version
+        """
+
+        cursor = conn.execute(sql, (template_key,))
+        rows = cursor.fetchall()
+
+        if not rows:
+            raise ValueError(f"模板 {template_key} 不存在")
+
+        templates = [PromptTemplateRepo._row_to_template(row) for row in rows]
+        return PromptTemplateBundle(templates=templates)
+
+    @staticmethod
+    def get_all_template_keys(conn: Connection) -> List[str]:
+        """
+        获取所有模板Key
+
+        Args:
+            conn: 数据库连接对象（由上层管理生命周期）
+
+        Returns:
+            List[str]: 模板Key列表
+
+        Raises:
+            SQLiteStorageError: 数据库操作失败
+        """
+        sql = "SELECT DISTINCT template_key FROM prompt_templates ORDER BY template_key"
+
+        cursor = conn.execute(sql)
+        rows = cursor.fetchall()
+
+        return [row['template_key'] for row in rows]
+
+    
+    @staticmethod
+    def delete_template(conn: Connection, template_key: str, version: str) -> bool:
+        """
+        删除指定版本的提示词模板
+
+        Args:
+            conn: 数据库连接对象（由上层管理生命周期）
+            template_key: 模板Key
+            version: 版本号
+
+        Returns:
+            bool: 删除是否成功
+
+        Raises:
+            SQLiteStorageError: 数据库操作失败
+        """
+        sql = "DELETE FROM prompt_templates WHERE template_key = ? AND version = ?"
+
+        cursor = conn.execute(sql, (template_key, version))
+        return cursor.rowcount > 0
+
+    @staticmethod
+    def _row_to_template(row) -> PromptTemplate:
+        """
+        将数据库行转换为PromptTemplate对象
+
+        Args:
+            row: 数据库行对象
+
+        Returns:
+            PromptTemplate: 提示词模板对象
+        """
+        required_params = json.loads(row['required_params']) if row['required_params'] else []
+
+        return PromptTemplate.create_template(
+            template_key=row['template_key'],
+            version=row['version'],
+            description=row['description'],
+            template_content=row['template_content'],
+            required_params=required_params,
+            language=row['language'],
+            notes=row['notes'] or ''
         )

@@ -31,48 +31,28 @@ CREATE TABLE IF NOT EXISTS chapter_chunks (
 );
 """
 
+# 提示词模板表创建语句
+CREATE_PROMPT_TEMPLATES_TABLE = """
+CREATE TABLE IF NOT EXISTS prompt_templates (
+    template_key TEXT NOT NULL,
+    version TEXT NOT NULL,
+    description TEXT NOT NULL,
+    template_content TEXT NOT NULL,
+    required_params TEXT NOT NULL DEFAULT '[]',
+    language TEXT NOT NULL DEFAULT 'zh',
+    notes TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (template_key, version)
+);
+"""
+
 # 索引创建语句
 INDEX_STATEMENTS = [
     "CREATE INDEX IF NOT EXISTS idx_novel_name ON chapter_chunks(novel_name);",
     "CREATE INDEX IF NOT EXISTS idx_chapter_id ON chapter_chunks(chapter_id);",
+    "CREATE INDEX IF NOT EXISTS idx_prompt_template_key ON prompt_templates(template_key);",
 ]
-
-
-def create_chapter_chunks_table(conn: Connection) -> None:
-    """
-    创建章节块表
-
-    Args:
-        conn: 数据库连接对象
-
-    Raises:
-        SQLiteStorageError: 表创建失败
-    """
-    try:
-        conn.execute(CREATE_CHAPTER_CHUNKS_TABLE)
-        conn.commit()
-    except Exception as e:
-        conn.rollback()
-        raise SQLiteStorageError(f"创建章节块表失败: {e}")
-
-
-def create_indexes(conn: Connection) -> None:
-    """
-    创建索引
-
-    Args:
-        conn: 数据库连接对象
-
-    Raises:
-        SQLiteStorageError: 索引创建失败
-    """
-    try:
-        for index_sql in INDEX_STATEMENTS:
-            conn.execute(index_sql)
-        conn.commit()
-    except Exception as e:
-        conn.rollback()
-        raise SQLiteStorageError(f"创建索引失败: {e}")
 
 
 def init_database(conn: Connection) -> None:
@@ -86,11 +66,19 @@ def init_database(conn: Connection) -> None:
         SQLiteStorageError: 数据库初始化失败
     """
     try:
-        # 创建表
-        create_chapter_chunks_table(conn)
+        # 创建章节块表
+        conn.execute(CREATE_CHAPTER_CHUNKS_TABLE)
+
+        # 创建提示词模板表
+        conn.execute(CREATE_PROMPT_TEMPLATES_TABLE)
+
         # 创建索引
-        create_indexes(conn)
+        for index_sql in INDEX_STATEMENTS:
+            conn.execute(index_sql)
+
+        conn.commit()
     except Exception as e:
+        conn.rollback()
         raise SQLiteStorageError(f"数据库初始化失败: {e}")
 
 
@@ -110,6 +98,24 @@ def drop_chapter_chunks_table(conn: Connection) -> None:
     except Exception as e:
         conn.rollback()
         raise SQLiteStorageError(f"删除章节块表失败: {e}")
+
+
+def drop_prompt_templates_table(conn: Connection) -> None:
+    """
+    删除提示词模板表（用于测试或重建）
+
+    Args:
+        conn: 数据库连接对象
+
+    Raises:
+        SQLiteStorageError: 表删除失败
+    """
+    try:
+        conn.execute("DROP TABLE IF EXISTS prompt_templates;")
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise SQLiteStorageError(f"删除提示词模板表失败: {e}")
 
 
 def get_table_info(conn: Connection, table_name: str) -> List[sqlite3.Row]:
