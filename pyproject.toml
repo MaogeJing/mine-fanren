@@ -8,6 +8,7 @@ dependencies = [
     "dotenv>=0.9.9",
     "langchain>=1.0.4",
     "langchain-openai>=1.0.2",
+    "openai>=2.7.1",
     "pydantic>=2.12.4",
     "tiktoken>=0.12.0",
 ]

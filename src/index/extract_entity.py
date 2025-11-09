@@ -37,7 +37,10 @@ class EntityExtractor:
 
         # 使用 init_chat_model 初始化模型，支持 OpenAI 兼容接口
         # 对于 kimi 模型，需要指定 model_provider="openai" 因为它使用 OpenAI 兼容接口
-        self.llm = init_chat_model(model_name, model_provider="openai")
+        self.llm = init_chat_model(
+            model_name, 
+            model_provider="openai",
+        )
 
 
         # 创建支持结构化输出的模型

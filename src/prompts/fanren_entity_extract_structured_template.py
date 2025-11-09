@@ -116,6 +116,7 @@ FANREN_ENTITY_EXTRACT_STRUCTURED_TEMPLATE = PromptTemplate.create_template(
 **提取标准**：
 - 必须提取：有具体名称、有剧情作用的地点
 - 不要提取：无名地点、路过的普通场所
+- 适用 json 按格式说明返回 
 
 ## 重要提醒
 1. 重点关注对整体剧情有重要价值的实体
